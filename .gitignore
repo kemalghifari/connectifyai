@@ -1,0 +1,20 @@
+# Ignore config.yaml containing sensitive API keys
+config.yaml
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environment folders
+env/
+venv/
+
+# Ignore IDE configuration files
+.idea/
+.vscode/
+
+# Ignore log files
+*.log
+
+# Ignore other potential sensitive files
+.env
