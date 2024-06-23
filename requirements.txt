@@ -1,0 +1,6 @@
+fastapi~=0.111.0
+pydantic~=2.7.4
+openai~=1.35.3
+chromadb~=0.5.3
+PyYAML~=6.0.1
+requests~=2.32.3
