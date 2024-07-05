@@ -1,15 +1,19 @@
 import os
-import json
 import logging
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
+from typing import List
 from jobsseekers_db import save_profile, get_profile, UserProfile, generate_embedding
 from jobs_db import save_job, query_similar_jobs, list_all_jobs, Job
+from agents import GPTAssistant
 
 app = FastAPI()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+assistant_id = "asst_Tl89JdZvyaw8kKR2D83s2TXT"
+gpt_assistant = GPTAssistant(assistant_id)
 
 
 class ProfileData(BaseModel):
@@ -21,22 +25,9 @@ class JobData(BaseModel):
     description: str
 
 
-@app.on_event("startup")
-async def load_job_data():
-    job_data_path = os.path.join(os.path.dirname(__file__), "job_data.json")
-    try:
-        with open(job_data_path, "r") as f:
-            job_data = json.load(f)
-            for job in job_data:
-                save_job(Job(title=job["title"], description=job["description"]))
-        logger.info("Job data loaded successfully.")
-    except Exception as e:
-        logger.error(f"Error loading job data: {e}")
-
-
 @app.get("/")
 def read_root():
-    return "Welcome to Connectify AI, we help jobsseekers enhance their employability through interactive chatbot"
+    return "Welcome to Connectify AI, we help job seekers enhance their employability through an interactive chatbot"
 
 
 @app.post("/profile")
@@ -75,14 +66,10 @@ async def recommend(profile_data: ProfileData):
     try:
         embedding = generate_embedding(profile_info['conversation'])
         recommendations = query_similar_jobs(embedding)
+        return {"recommendation": recommendations}
     except Exception as e:
         logger.error(f"Error in embedding or querying jobs: {e}")
         raise HTTPException(status_code=500, detail="Error processing profile")
-
-    if recommendations:
-        return {"recommendation": recommendations}
-    else:
-        raise HTTPException(status_code=404, detail="No suitable job found")
 
 
 @app.get("/jobs")
@@ -96,26 +83,25 @@ async def get_jobs():
 
 
 @app.post("/jobs")
-async def create_job(job_data: JobData):
-    job = Job(title=job_data.title, description=job_data.description)
+async def create_job(job_data: List[JobData]):
     try:
-        save_job(job)
-        # Append the new job to job_data.json
-        job_data_path = os.path.join(os.path.dirname(__file__), "job_data.json")
-        try:
-            with open(job_data_path, "r") as f:
-                job_list = json.load(f)
-        except FileNotFoundError:
-            job_list = []
-
-        job_list.append(job_data.dict())
-        with open(job_data_path, "w") as f:
-            json.dump(job_list, f, indent=4)
-
-        return {"message": "Job saved successfully"}
+        for job in job_data:
+            job_instance = Job(title=job.title, description=job.description)
+            save_job(job_instance)
+        return {"message": "Jobs saved successfully"}
     except Exception as e:
-        logger.error(f"Error saving job: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        logger.error(f"Error saving jobs: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+
+
+@app.post("/chat")
+async def chat(profile_data: ProfileData):
+    profile_info = profile_data.profile_data
+    conversation_history = profile_info.get("conversation", "")
+    conversation = gpt_assistant.create_conversation()
+    conversation = gpt_assistant.send_message(conversation, "user", conversation_history)
+    response = gpt_assistant.get_response(conversation)
+    return {"response": response}
 
 
 if __name__ == "__main__":

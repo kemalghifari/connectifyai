@@ -1,7 +1,7 @@
 import chromadb
-from pydantic import BaseModel
 import openai
 import yaml
+from pydantic import BaseModel
 import os
 
 # Load configuration from config.yaml
