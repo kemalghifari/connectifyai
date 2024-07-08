@@ -1,9 +1,9 @@
 fastapi~=0.110.3
 pydantic~=2.7.4
-openai~=1.0.0
+openai~=0.28.0
 chromadb~=0.4.24
 PyYAML~=6.0.1
-requests~=2.32.3
+requests~=2.31.0
 uvicorn~=0.25.0
 chainlit~=1.0.506
 agents~=1.4.0
@@ -21,3 +21,7 @@ Jinja2~=3.1.4
 uuid~=1.30
 setuptools~=65.5.1
 
+
+aiohttp~=3.9.5
+PyPDF2~=3.0.1
+be~=0.3.8
