@@ -5,7 +5,6 @@ import chainlit as cl
 from PyPDF2 import PdfReader
 from io import BytesIO
 import logging
-import asyncio
 
 # Ensure the correct import
 from BE.agents import call_function
